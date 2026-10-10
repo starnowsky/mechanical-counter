@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mechanical-counter"
+version = "1.0.0"
+description = "Mechanical counter for 3D printing — STL generation, assembly animation, sound"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "you@example.com"},
+]
+keywords = ["3d-printing", "stl", "cad", "mechanical", "counter", "pyvista"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Manufacturing",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Graphics :: 3D Modeling",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "numpy>=1.21",
+    "numpy-stl>=3.0",
+    "tqdm>=4.60",
+]
+
+[project.optional-dependencies]
+fast = ["pyvista>=0.42", "vtk>=9.2"]
+step = ["cadquery>=2.4"]
+audio = ["imageio>=2.30", "imageio-ffmpeg>=0.4", "pillow>=10.0"]
+preview = ["matplotlib>=3.5"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "flake8>=6.0",
+    "black>=23.0",
+    "isort>=5.12",
+    "mypy>=1.5",
+]
+all = [
+    "mechanical-counter[fast,step,audio,preview]",
+]
+
+[project.scripts]
+mc = "counter.cli:main"
+mechanical-counter = "counter.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/USERNAME/mechanical-counter"
+Documentation = "https://github.com/USERNAME/mechanical-counter/blob/main/docs/ARCHITECTURE.md"
+Repository = "https://github.com/USERNAME/mechanical-counter"
+Issues = "https://github.com/USERNAME/mechanical-counter/issues"
+Changelog = "https://github.com/USERNAME/mechanical-counter/blob/main/CHANGELOG.md"
+
+[tool.setuptools]
+packages = ["counter"]
+
+[tool.setuptools.package-data]
+counter = ["py.typed"]
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=counter --cov-report=term-missing"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

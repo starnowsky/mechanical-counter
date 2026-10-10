@@ -1,0 +1,48 @@
+name: Render Preview
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "counter/**"
+      - "docs/images/**"
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system deps (EGL, ffmpeg, xvfb)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+              xvfb libgl1-mesa-dri libglx-mesa0 libegl1-mesa \
+              libosmesa6 ffmpeg
+
+      - name: Install Python deps
+        run: |
+          pip install -e ".[all]"
+
+      - name: Render preview (xvfb for off-screen)
+        run: |
+          xvfb-run -a -s "-screen 0 1280x720x24" \
+              mc animate --fast --layout none --no-audio \
+              --out docs/images/preview.mp4
+
+      - name: Convert to GIF
+        run: |
+          ffmpeg -y -i docs/images/preview.mp4 \
+              -vf "fps=15,scale=640:-1:flags=lanczos" \
+              -loop 0 docs/images/preview.gif
+
+      - name: Commit preview
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: update preview [skip ci]"
+          file_pattern: "docs/images/*"
