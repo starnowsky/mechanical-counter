@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
-    {name = "Your Name", email = "you@example.com"},
+    {name = "starnowsky", email = "43677227+starnowsky@users.noreply.github.com"},
 ]
 keywords = ["3d-printing", "stl", "cad", "mechanical", "counter", "pyvista"]
 classifiers = [
@@ -55,11 +55,11 @@ mc = "counter.cli:main"
 mechanical-counter = "counter.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/USERNAME/mechanical-counter"
-Documentation = "https://github.com/USERNAME/mechanical-counter/blob/main/docs/ARCHITECTURE.md"
-Repository = "https://github.com/USERNAME/mechanical-counter"
-Issues = "https://github.com/USERNAME/mechanical-counter/issues"
-Changelog = "https://github.com/USERNAME/mechanical-counter/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/starnowsky/mechanical-counter"
+Documentation = "https://github.com/starnowsky/mechanical-counter/blob/main/docs/ARCHITECTURE.md"
+Repository = "https://github.com/starnowsky/mechanical-counter"
+Issues = "https://github.com/starnowsky/mechanical-counter/issues"
+Changelog = "https://github.com/starnowsky/mechanical-counter/blob/main/CHANGELOG.md"
 
 [tool.setuptools]
 packages = ["counter"]

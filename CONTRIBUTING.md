@@ -2,15 +2,15 @@
 
 ## How to help
 
-- 🐛 **Bugs** — [Issues](https://github.com/USERNAME/mechanical-counter/issues/new?template=bug_report.md)
-- 💡 **Ideas** — [Issues](https://github.com/USERNAME/mechanical-counter/issues/new?template=feature_request.md)
+- 🐛 **Bugs** — [Issues](https://github.com/starnowsky/mechanical-counter/issues/new?template=bug_report.md)
+- 💡 **Ideas** — [Issues](https://github.com/starnowsky/mechanical-counter/issues/new?template=feature_request.md)
 - 📝 **Code** — Pull Request
 - 🖨 **Assembly photos** — send them via Issues or Discussions
 
 ## Development
 
 ```bash
-git clone https://github.com/USERNAME/mechanical-counter.git
+git clone https://github.com/starnowsky/mechanical-counter.git
 cd mechanical-counter
 pip install -e ".[all,dev]"
 

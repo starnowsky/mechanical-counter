@@ -6,7 +6,7 @@
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/USERNAME/mechanical-counter/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/mechanical-counter/actions)
+[![CI](https://github.com/starnowsky/mechanical-counter/actions/workflows/ci.yml/badge.svg)](https://github.com/starnowsky/mechanical-counter/actions)
 [![PyPI](https://img.shields.io/pypi/v/mechanical-counter.svg)](https://pypi.org/project/mechanical-counter/)
 
 <img src="docs/images/preview.gif" alt="preview" width="720"/>
@@ -53,7 +53,7 @@ pip install mechanical-counter
 ### From source
 
 ```bash
-git clone https://github.com/USERNAME/mechanical-counter.git
+git clone https://github.com/starnowsky/mechanical-counter.git
 cd mechanical-counter
 pip install -e ".[full]"
 ```
@@ -171,7 +171,7 @@ with photos, a bill of materials, and post-processing.
 ## 🤝 Contributing
 
 PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
-Bugs and ideas — in [Issues](https://github.com/USERNAME/mechanical-counter/issues).
+Bugs and ideas — in [Issues](https://github.com/starnowsky/mechanical-counter/issues).
 
 ## 📜 License
 
