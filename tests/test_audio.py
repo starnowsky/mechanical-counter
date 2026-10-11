@@ -1,6 +1,8 @@
 """Тесты звука."""
+
 import numpy as np
-from counter.audio import click, motor_hum, overflow_chime, build_track
+
+from counter.audio import build_track, click
 
 
 def test_click_nonzero():

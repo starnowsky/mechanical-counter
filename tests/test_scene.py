@@ -1,4 +1,5 @@
 """Тесты сцены."""
+
 from counter import Config
 from counter.scene import build_scene
 

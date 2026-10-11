@@ -11,27 +11,27 @@ import os
 import subprocess
 import time
 from dataclasses import dataclass
-from typing import List, Dict, Tuple, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 from tqdm import tqdm
 
 # ---------- ОБЯЗАТЕЛЬНЫЕ ИМПОРТЫ ПРОЕКТА ----------
-from counter import Config, drum_role
-from scene import build_scene, Part
+from counter import Config, __version__
+from counter.scene import build_scene
 
 try:
-    from backend_pv import PVBackend, HAS_PV
+    from counter.backend_pv import HAS_PV, PVBackend
 except Exception as _e:
     print("PyVista backend не загружен:", _e)
     HAS_PV = False
 
-from cameras import apply_preset, auto_distance, split_screen_multi
-from audio import (click, motor_hum, overflow_chime, silence,
-                   build_track, save_wav)
+from counter.audio import build_track, click, motor_hum, overflow_chime, save_wav
+from counter.cameras import apply_preset, auto_distance, split_screen_multi
 
 try:
     import imageio.v2 as imageio
+
     HAS_IMAGEIO = True
 except ImportError:
     HAS_IMAGEIO = False
@@ -42,6 +42,7 @@ log = logging.getLogger("anim")
 # ============================================================
 #  КОНФИГ АНИМАЦИИ
 # ============================================================
+
 
 @dataclass
 class AnimConfig:
@@ -61,8 +62,8 @@ class AnimConfig:
 #  ПОШАГОВОЕ ВРАЩЕНИЕ БАРАБАНА (36° + overshoot)
 # ============================================================
 
-def drum_step_angle(t: float, digit: int, cfg: Config,
-                    slow_step: bool) -> float:
+
+def drum_step_angle(t: float, digit: int, cfg: Config, slow_step: bool) -> float:
     step = 2 * np.pi / cfg.digit_count
     if not slow_step:
         return -step * digit
@@ -80,13 +81,14 @@ def drum_step_angle(t: float, digit: int, cfg: Config,
 #  ГЕНЕРАЦИЯ ВСЕХ КАДРОВ (батч-склейка, VTK-тихий)
 # ============================================================
 
-def render_all(parts, cfg: Config, ac: AnimConfig,
-               cameras: List[str], final_value: int):
+
+def render_all(
+    parts, cfg: Config, ac: AnimConfig, cameras: List[str], final_value: int
+):
     backend = PVBackend(resolution=ac.resolution)
     backend.add_parts(parts)
 
-    frames_per_cam: List[List[np.ndarray]] = [[] for _ in cameras] \
-        if cameras else [[]]
+    frames_per_cam: List[List[np.ndarray]] = [[] for _ in cameras] if cameras else [[]]
     audio_events: List[Tuple[int, np.ndarray]] = []
     frame_idx = 0
     n_drums = len(cfg.drum_centers_x())
@@ -96,8 +98,7 @@ def render_all(parts, cfg: Config, ac: AnimConfig,
     log.info(f"Фаза 1: сборка ({n_explode} кадров, {len(cameras) or 1} камер)")
     for i in tqdm(range(n_explode), desc="сборка"):
         t = i / max(n_explode - 1, 1)
-        imgs = _render_one(backend, parts, cfg, ac, "explode", t,
-                           cameras=cameras)
+        imgs = _render_one(backend, parts, cfg, ac, "explode", t, cameras=cameras)
         for k, img in enumerate(imgs):
             frames_per_cam[k].append(img)
         if i % 15 == 0:
@@ -120,12 +121,13 @@ def render_all(parts, cfg: Config, ac: AnimConfig,
         total = int(round(t * final_value))
         values = {"total": total}
         for k in range(n_drums):
-            values[f"digit_{k}"] = (total // (10 ** k)) % 10
-            prev_d = (prev_total // (10 ** k)) % 10
-            values[f"active_{k}"] = (prev_d != values[f"digit_{k}"])
+            values[f"digit_{k}"] = (total // (10**k)) % 10
+            prev_d = (prev_total // (10**k)) % 10
+            values[f"active_{k}"] = prev_d != values[f"digit_{k}"]
 
-        imgs = _render_one(backend, parts, cfg, ac, "operate", t,
-                           values=values, cameras=cameras)
+        imgs = _render_one(
+            backend, parts, cfg, ac, "operate", t, values=values, cameras=cameras
+        )
         for k, img in enumerate(imgs):
             frames_per_cam[k].append(img)
 
@@ -133,7 +135,7 @@ def render_all(parts, cfg: Config, ac: AnimConfig,
             if ((total // 1) % 10) != ((prev_total // 1) % 10):
                 audio_events.append((frame_idx, click(2400, 0.025, 0.3)))
             for k in range(1, n_drums):
-                if (prev_total // (10 ** k)) % 10 != (total // (10 ** k)) % 10:
+                if (prev_total // (10**k)) % 10 != (total // (10**k)) % 10:
                     audio_events.append((frame_idx, overflow_chime(0.18, 0.28)))
             prev_total = total
         if i % 8 == 0:
@@ -145,8 +147,7 @@ def render_all(parts, cfg: Config, ac: AnimConfig,
     log.info(f"Фаза 4: разборка ({n_dis} кадров)")
     for i in tqdm(range(n_dis), desc="разборка"):
         t = i / max(n_dis - 1, 1)
-        imgs = _render_one(backend, parts, cfg, ac, "disassemble", t,
-                           cameras=cameras)
+        imgs = _render_one(backend, parts, cfg, ac, "disassemble", t, cameras=cameras)
         for k, img in enumerate(imgs):
             frames_per_cam[k].append(img)
         frame_idx += 1
@@ -156,16 +157,18 @@ def render_all(parts, cfg: Config, ac: AnimConfig,
     # ---------- склейка ОДИН РАЗ ----------
     if len(cameras) > 1 and ac.layout != "none":
         log.info(f"Split-screen: {ac.layout} ({frame_idx} кадров)")
-        frames = split_screen_multi(frames_per_cam,
-                                    layout=ac.layout, size=ac.resolution)
+        frames = split_screen_multi(
+            frames_per_cam, layout=ac.layout, size=ac.resolution
+        )
     else:
         frames = frames_per_cam[0]
 
     return frames, audio_events
 
 
-def _render_one(backend, parts, cfg, ac, mode, t, values=None,
-                cameras=None) -> List[np.ndarray]:
+def _render_one(
+    backend, parts, cfg, ac, mode, t, values=None, cameras=None
+) -> List[np.ndarray]:
     values = values or {}
     transforms = {}
     highlight = None
@@ -205,14 +208,14 @@ def _render_one(backend, parts, cfg, ac, mode, t, values=None,
             v = p.mesh.array() + p.final_offset - np.array([cx, 0, pivot_z])
             c, s = np.cos(angle), np.sin(angle)
             R = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
-            v = (v.reshape(-1, 3) @ R.T).reshape(-1, 3, 3) \
-                + np.array([cx, 0, pivot_z])
+            v = (v.reshape(-1, 3) @ R.T).reshape(-1, 3, 3) + np.array([cx, 0, pivot_z])
             transforms[name] = v
             if values.get(f"active_{i}", False):
                 highlight = name
 
-    backend.update_parts(transforms, highlight=highlight,
-                         transparency_override=transparency)
+    backend.update_parts(
+        transforms, highlight=highlight, transparency_override=transparency
+    )
 
     if mode == "operate":
         backend.add_title(f"РАБОТА   •   значение = {values.get('total', 0):03d}")
@@ -239,20 +242,21 @@ def _render_one(backend, parts, cfg, ac, mode, t, values=None,
 #  СОХРАНЕНИЕ ВИДЕО + ЗВУК
 # ============================================================
 
+
 def save_video(frames, path, fps):
     if not HAS_IMAGEIO:
         log.warning("imageio не установлен — сохраняю PNG-кадры")
         os.makedirs(path + "_frames", exist_ok=True)
-        for i, f in enumerate(frames[::max(1, len(frames)//30)]):
-            imageio.imsave(f"{path}_frames/f{i:04d}.png", f) \
-                if HAS_IMAGEIO else None
+        for i, f in enumerate(frames[:: max(1, len(frames) // 30)]):
+            imageio.imsave(f"{path}_frames/f{i:04d}.png", f) if HAS_IMAGEIO else None
         return
     ext = os.path.splitext(path)[1].lower()
     if ext == ".gif":
         imageio.mimsave(path, frames, fps=fps, loop=0)
     elif ext == ".mp4":
-        imageio.mimsave(path, frames, fps=fps, codec="libx264",
-                        quality=8, macro_block_size=None)
+        imageio.mimsave(
+            path, frames, fps=fps, codec="libx264", quality=8, macro_block_size=None
+        )
     else:
         imageio.mimsave(path + ".gif", frames, fps=fps, loop=0)
     log.info(f"Видео: {path} ({os.path.getsize(path)/1024/1024:.2f} МБ)")
@@ -261,9 +265,22 @@ def save_video(frames, path, fps):
 def mux_audio(video_path, wav_path, out_path):
     try:
         subprocess.run(
-            ["ffmpeg", "-y", "-i", video_path, "-i", wav_path,
-             "-c:v", "copy", "-c:a", "aac", "-shortest", out_path],
-            check=True, capture_output=True,
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                video_path,
+                "-i",
+                wav_path,
+                "-c:v",
+                "copy",
+                "-c:a",
+                "aac",
+                "-shortest",
+                out_path,
+            ],
+            check=True,
+            capture_output=True,
         )
         log.info(f"✔ Видео со звуком: {out_path}")
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
@@ -274,26 +291,62 @@ def mux_audio(video_path, wav_path, out_path):
 #  CLI
 # ============================================================
 
-def main():
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s  %(levelname)-7s  %(message)s",
-        datefmt="%H:%M:%S",
-    )
-    p = argparse.ArgumentParser(description="Полный рендер счётчика.")
-    p.add_argument("--digits", type=int, default=3, choices=[1, 2, 3, 4])
-    p.add_argument("--fps", type=int, default=30)
-    p.add_argument("--out", default="out/assembly.mp4")
-    p.add_argument("--value", type=int, default=None)
-    p.add_argument("--layout",
-                   choices=["none", "hstack", "vstack", "lshape", "grid"],
-                   default="lshape")
-    p.add_argument("--no-transparent", action="store_true")
-    p.add_argument("--no-audio", action="store_true")
-    p.add_argument("--no-step", action="store_true")
-    p.add_argument("--fast", action="store_true")
-    args = p.parse_args()
 
+def run_animation(
+    cfg: Config,
+    ac: AnimConfig,
+    out: str = "out/showcase.mp4",
+    final_value: Optional[int] = None,
+) -> str:
+    """Полный пайплайн: сцена → кадры → видео (+ звук)."""
+    if not HAS_PV:
+        raise RuntimeError("PyVista не установлен. pip install pyvista vtk")
+
+    if final_value is None:
+        final_value = 10**cfg.digits - 1
+
+    cameras = ["iso", "front", "top"] if ac.layout != "none" else []
+    parts = build_scene(cfg)
+
+    t0 = time.time()
+    frames, audio_events = render_all(parts, cfg, ac, cameras, final_value)
+    log.info(
+        f"Рендер: {len(frames)} кадров за {time.time()-t0:.1f} с "
+        f"({(time.time()-t0)/len(frames)*1000:.0f} мс/кадр)"
+    )
+
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
+    save_video(frames, out, ac.fps)
+
+    if ac.with_audio and audio_events:
+        log.info(f"Звук: {len(audio_events)} событий")
+        track = build_track(ac.fps, len(frames), audio_events)
+        wav_path = os.path.splitext(out)[0] + ".wav"
+        save_wav(wav_path, track)
+        if out.endswith(".mp4"):
+            out_with_audio = os.path.splitext(out)[0] + "_audio.mp4"
+            mux_audio(out, wav_path, out_with_audio)
+
+    log.info(f"✔ Готово за {time.time()-t0:.1f} с")
+    return out
+
+
+def cmd_stl(args: argparse.Namespace) -> None:
+    from counter.geometry import SCHEME, run_stl
+
+    if args.scheme:
+        print(SCHEME)
+        return
+    run_stl(
+        digits=args.digits,
+        out=args.out,
+        make_step=not args.no_step,
+        make_png=args.png,
+        quiet=args.quiet,
+    )
+
+
+def cmd_animate(args: argparse.Namespace) -> None:
     cfg = Config(digits=args.digits)
     ac = AnimConfig(fps=args.fps, layout=args.layout)
     ac.transparent_housing = not args.no_transparent
@@ -304,37 +357,61 @@ def main():
         ac.fps = 20
         ac.duration_operate = 4.0
 
-    final_value = args.value if args.value is not None else 10 ** args.digits - 1
+    final_value = args.value if args.value is not None else 10**args.digits - 1
 
-    if not HAS_PV:
-        log.error("PyVista не установлен. pip install pyvista vtk")
-        return
+    log.info(
+        f"Конфиг: {args.digits} разряда, {ac.fps} fps, "
+        f"layout={ac.layout}, прозрачность={ac.transparent_housing}, "
+        f"звук={ac.with_audio}, финал={final_value}"
+    )
 
-    cameras = ["iso", "front", "top"] if ac.layout != "none" else []
+    run_animation(cfg, ac, out=args.out, final_value=final_value)
 
-    log.info(f"Конфиг: {args.digits} разряда, {ac.fps} fps, "
-             f"layout={ac.layout}, прозрачность={ac.transparent_housing}, "
-             f"звук={ac.with_audio}, финал={final_value}")
 
-    parts = build_scene(cfg)
-    t0 = time.time()
-    frames, audio_events = render_all(parts, cfg, ac, cameras, final_value)
-    log.info(f"Рендер: {len(frames)} кадров за {time.time()-t0:.1f} с "
-             f"({(time.time()-t0)/len(frames)*1000:.0f} мс/кадр)")
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="mc", description="Механический счётчик: генерация STL и анимация сборки."
+    )
+    p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
-    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    save_video(frames, args.out, ac.fps)
+    sub = p.add_subparsers(dest="command", required=True)
 
-    if ac.with_audio and audio_events:
-        log.info(f"Звук: {len(audio_events)} событий")
-        track = build_track(ac.fps, len(frames), audio_events)
-        wav_path = os.path.splitext(args.out)[0] + ".wav"
-        save_wav(wav_path, track)
-        if args.out.endswith(".mp4"):
-            out_with_audio = os.path.splitext(args.out)[0] + "_audio.mp4"
-            mux_audio(args.out, wav_path, out_with_audio)
+    ps = sub.add_parser("stl", help="Генерация STL всех деталей")
+    ps.add_argument("--digits", type=int, default=3, choices=[1, 2, 3, 4])
+    ps.add_argument("--out", default="stl", help="Папка для STL")
+    ps.add_argument("--no-step", action="store_true", help="Не экспортировать STEP")
+    ps.add_argument("--png", action="store_true", help="Сохранить PNG-превью")
+    ps.add_argument("--scheme", action="store_true", help="Показать схему сборки")
+    ps.add_argument("-q", "--quiet", action="store_true", help="Меньше логов")
+    ps.set_defaults(func=cmd_stl)
 
-    log.info(f"✔ Готово за {time.time()-t0:.1f} с")
+    pa = sub.add_parser("animate", help="Анимация сборки / работы механизма")
+    pa.add_argument("--digits", type=int, default=3, choices=[1, 2, 3, 4])
+    pa.add_argument("--fps", type=int, default=30)
+    pa.add_argument("--out", default="out/assembly.mp4")
+    pa.add_argument("--value", type=int, default=None)
+    pa.add_argument(
+        "--layout",
+        choices=["none", "hstack", "vstack", "lshape", "grid"],
+        default="lshape",
+    )
+    pa.add_argument("--no-transparent", action="store_true")
+    pa.add_argument("--no-audio", action="store_true")
+    pa.add_argument("--no-step", action="store_true")
+    pa.add_argument("--fast", action="store_true")
+    pa.set_defaults(func=cmd_animate)
+
+    return p
+
+
+def main(argv: Optional[List[str]] = None) -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s  %(levelname)-7s  %(message)s",
+        datefmt="%H:%M:%S",
+    )
+    args = build_parser().parse_args(argv)
+    args.func(args)
 
 
 if __name__ == "__main__":
