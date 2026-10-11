@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Механический счётчик для 3D-печати.
-Оптимизированная версия: быстрая генерация, круглая геометрия, фаски,
-проверка манифолдности, экспорт STL/STEP, CLI.
+Mechanical counter for 3D printing.
+Optimized version: fast generation, round geometry, chamfers,
+manifold validation, STL/STEP export, CLI.
 """
 
 import argparse
@@ -42,7 +42,7 @@ except ImportError:
 
 
 # ============================================================
-#  ЛОГИРОВАНИЕ
+#  LOGGING
 # ============================================================
 
 logging.basicConfig(
@@ -54,18 +54,18 @@ log = logging.getLogger("counter")
 
 
 # ============================================================
-#  КОНФИГУРАЦИЯ
+#  CONFIGURATION
 # ============================================================
 
 
 @dataclass
 class Config:
-    # --- барабан ---
+    # --- drum ---
     drum_radius: float = 12.0
     drum_length: float = 18.0
     axle_radius: float = 2.0
-    axle_clearance: float = 0.15  # зазор ось-отверстие
-    axle_protrude: float = 1.5  # выступ оси за стенку
+    axle_clearance: float = 0.15  # axle-to-hole clearance
+    axle_protrude: float = 1.5  # axle protrusion past the wall
     digit_count: int = 10
     digit_w: float = 8.0
     digit_h: float = 11.0
@@ -73,9 +73,9 @@ class Config:
     digit_depth: float = 0.6
     tooth_h: float = 2.5
     tooth_w: float = 2.0
-    drum_segments: int = 96  # больше → круглее
+    drum_segments: int = 96  # more → rounder
 
-    # --- корпус ---
+    # --- housing ---
     wall: float = 2.0
     win_w: float = 22.0
     win_h: float = 16.0
@@ -83,17 +83,17 @@ class Config:
     top_clearance: float = 4.0
     bottom_clearance: float = 4.0
 
-    # --- крепёж ---
+    # --- fastener ---
     ring_major: float = 3.0
     ring_minor: float = 1.0
 
-    # --- разряды ---
+    # --- digits ---
     digits: int = 3  # 1..4
 
-    # --- геометрия цифр ---
-    chamfer: float = 0.3  # фаска на кромках
+    # --- digit geometry ---
+    chamfer: float = 0.3  # chamfer on edges
 
-    # --- производительность ---
+    # --- performance ---
     tolerance: float = 1e-6
 
     @property
@@ -104,7 +104,7 @@ class Config:
             + (self.digits - 1) * self.gap_between_drums
             + 2 * self.wall
             + 2 * 2.0
-        )  # +2 по бокам для прочности
+        )  # +2 on each side for strength
 
     @property
     def housing_d(self) -> float:
@@ -126,14 +126,14 @@ CFG = Config()
 
 
 # ============================================================
-#  MESH — векторизованный контейнер треугольников
+#  MESH — vectorized triangle container
 # ============================================================
 
 
 class Mesh:
     """
-    Хранит треугольники в виде numpy-массива (N, 3, 3).
-    Быстрое добавление через append_array без создания np.array на каждый треугольник.
+    Stores triangles as a numpy array (N, 3, 3).
+    Fast appends via append_array without allocating an np.array per triangle.
     """
 
     __slots__ = ("tris", "_cache")
@@ -143,7 +143,7 @@ class Mesh:
         self._cache: Optional[np.ndarray] = None
 
     def add(self, tri_array: np.ndarray):
-        """tri_array: (N, 3, 3) — пакетное добавление."""
+        """tri_array: (N, 3, 3) — batched append."""
         if tri_array.size == 0:
             return
         self.tris.append(np.asarray(tri_array, dtype=np.float64))
@@ -200,8 +200,8 @@ class Mesh:
 
     def is_manifold(self) -> Tuple[bool, int]:
         """
-        Проверка: каждое ребро должно встречаться ровно 2 раза.
-        Возвращает (ок, число «висячих» рёбер).
+        Check that every edge appears exactly twice.
+        Returns (ok, number of dangling edges).
         """
         v = self.array()
         if len(v) == 0:
@@ -209,11 +209,11 @@ class Mesh:
         edges = np.concatenate(
             [v[:, [0, 1]], v[:, [1, 2]], v[:, [2, 0]]], axis=0
         )  # (3N, 2, 3)
-        # округляем до 1e-6, чтобы поймать совпадающие вершины
+        # round to 1e-6 to catch coincident vertices
         keys = np.round(edges / 1e-6).astype(np.int64)
-        # сортируем пару вершин
+        # sort the vertex pair
         keys = np.sort(keys, axis=1)
-        # превращаем в одну строку-ключ
+        # turn into a single string key
         flat = keys.reshape(-1, 6)
         _, counts = np.unique(flat, axis=0, return_counts=True)
         bad = int((counts != 2).sum())
@@ -226,8 +226,8 @@ class Mesh:
         m = mesh.Mesh(data)
         m.save(path)
         log.info(
-            f"STL → {path}  ({len(arr):,} треуг., "
-            f"{os.path.getsize(path)/1024:.1f} КБ)"
+            f"STL → {path}  ({len(arr):,} tris, "
+            f"{os.path.getsize(path)/1024:.1f} KB)"
         )
 
     def render_png(self, path: str, title: str = ""):
@@ -257,12 +257,12 @@ class Mesh:
 
 
 # ============================================================
-#  ПРИМИТИВЫ (возвращают numpy-массивы, а не списки)
+#  PRIMITIVES (return numpy arrays, not lists)
 # ============================================================
 
 
 def make_box(sx, sy, sz, center=(0, 0, 0), chamfer=0.0) -> np.ndarray:
-    """Параллелепипед. Опционально — фаски (упрощённо: срез углов)."""
+    """Box. Optionally chamfered (simplified: corner cut)."""
     cx, cy, cz = center
     x0, x1 = cx - sx / 2, cx + sx / 2
     y0, y1 = cy - sy / 2, cy + sy / 2
@@ -283,17 +283,17 @@ def make_box(sx, sy, sz, center=(0, 0, 0), chamfer=0.0) -> np.ndarray:
     faces = np.array(
         [
             [0, 2, 1],
-            [0, 3, 2],  # низ (нормаль вниз)
+            [0, 3, 2],  # bottom (normal down)
             [4, 5, 6],
-            [4, 6, 7],  # верх
+            [4, 6, 7],  # top
             [0, 1, 5],
-            [0, 5, 4],  # перед
+            [0, 5, 4],  # front
             [1, 2, 6],
-            [1, 6, 5],  # право
+            [1, 6, 5],  # right
             [2, 3, 7],
-            [2, 7, 6],  # зад
+            [2, 7, 6],  # back
             [3, 0, 4],
-            [3, 4, 7],  # лево
+            [3, 4, 7],  # left
         ]
     )
     return v[faces]
@@ -315,7 +315,7 @@ def make_cylinder(
     idx = np.arange(segments)
     nxt = (idx + 1) % segments
 
-    # боковые стенки
+    # side walls
     side = np.empty((segments * 2, 3, 3))
     side[0::2, 0] = bot
     side[0::2, 1] = bot[nxt]
@@ -327,7 +327,7 @@ def make_cylinder(
     if not cap:
         return side
 
-    # крышки
+    # caps
     bc = np.array([cx, cy, z0])
     tc = np.array([cx, cy, z1])
     bot_cap = np.empty((segments, 3, 3))
@@ -343,7 +343,7 @@ def make_cylinder(
 
 
 def make_tube(r_out, r_in, height, segments=96, center=(0, 0, 0)) -> np.ndarray:
-    """Полый цилиндр (труба)."""
+    """Hollow cylinder (tube)."""
     cx, cy, cz = center
     angles = np.linspace(0, 2 * np.pi, segments, endpoint=False)
     cos_a, sin_a = np.cos(angles), np.sin(angles)
@@ -357,7 +357,7 @@ def make_tube(r_out, r_in, height, segments=96, center=(0, 0, 0)) -> np.ndarray:
     idx = np.arange(segments)
     nxt = (idx + 1) % segments
 
-    # внешняя стенка (нормаль наружу)
+    # outer wall (normal outward)
     out = np.empty((segments * 2, 3, 3))
     out[0::2, 0] = ob
     out[0::2, 1] = ob[nxt]
@@ -366,7 +366,7 @@ def make_tube(r_out, r_in, height, segments=96, center=(0, 0, 0)) -> np.ndarray:
     out[1::2, 1] = ot[nxt]
     out[1::2, 2] = ot
 
-    # внутренняя стенка (нормаль внутрь)
+    # inner wall (normal inward)
     inn = np.empty((segments * 2, 3, 3))
     inn[0::2, 0] = ib[nxt]
     inn[0::2, 1] = ib
@@ -375,7 +375,7 @@ def make_tube(r_out, r_in, height, segments=96, center=(0, 0, 0)) -> np.ndarray:
     inn[1::2, 1] = it
     inn[1::2, 2] = it[nxt]
 
-    # верхнее кольцо
+    # top ring
     top_r = np.empty((segments * 2, 3, 3))
     top_r[0::2, 0] = ot
     top_r[0::2, 1] = ot[nxt]
@@ -384,7 +384,7 @@ def make_tube(r_out, r_in, height, segments=96, center=(0, 0, 0)) -> np.ndarray:
     top_r[1::2, 1] = it[nxt]
     top_r[1::2, 2] = it
 
-    # нижнее кольцо
+    # bottom ring
     bot_r = np.empty((segments * 2, 3, 3))
     bot_r[0::2, 0] = ob[nxt]
     bot_r[0::2, 1] = ob
@@ -405,7 +405,7 @@ def make_torus(R, r, seg_major=48, seg_minor=16, center=(0, 0, 0)) -> np.ndarray
     Y = cy + (R + r * np.cos(V)) * np.sin(U)
     Z = cz + r * np.sin(V)
     P = np.stack([X, Y, Z], axis=-1)  # (major, minor, 3)
-    # строим треугольники
+    # build the triangles
     tris = np.empty((seg_major * seg_minor * 2, 3, 3))
     for i in range(seg_major):
         i2 = (i + 1) % seg_major
@@ -419,7 +419,7 @@ def make_torus(R, r, seg_major=48, seg_minor=16, center=(0, 0, 0)) -> np.ndarray
 
 
 # ============================================================
-#  ЦИФРЫ (7-сегментные, с фаской)
+#  DIGITS (7-segment, chamfered)
 # ============================================================
 
 DIGITS = {
@@ -459,7 +459,7 @@ def digit_mesh(
 
 
 # ============================================================
-#  БАРАБАН
+#  DRUM
 # ============================================================
 
 
@@ -467,27 +467,27 @@ def build_drum(cfg: Config, role: str = "units") -> Mesh:
     """
     role: 'units' | 'tens' | 'middle' | 'hundreds'
     """
-    log.info(f"Барабан [{role}]...")
+    log.info(f"Drum [{role}]...")
     m = Mesh()
     R = cfg.drum_radius
     H = cfg.drum_length
     r_in = cfg.axle_radius + cfg.axle_clearance
 
-    # корпус барабана
+    # drum body
     m.add(make_tube(R, r_in, H, segments=cfg.drum_segments))
 
-    # цифры
+    # digits
     digit_parts = []
     for k in range(cfg.digit_count):
         d = digit_mesh(
             k, cfg.digit_w, cfg.digit_h, cfg.digit_t, cfg.digit_depth, cfg.chamfer
         )
-        # локальная система: x — ширина, y — высота, z — глубина
-        # преобразование: (x,y,z) → (z, x, y) → сдвиг на R
+        # local frame: x — width, y — height, z — depth
+        # mapping: (x,y,z) → (z, x, y) → shift by R
         d2 = d[:, :, [2, 0, 1]].copy()
         d2[:, :, 0] += R - 0.01
         d2[:, :, 2] += H / 2
-        # поворот вокруг Z
+        # rotate around Z
         angle = -2 * np.pi * k / cfg.digit_count + np.pi / 2
         c, s = np.cos(angle), np.sin(angle)
         Rz = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
@@ -495,7 +495,7 @@ def build_drum(cfg: Config, role: str = "units") -> Mesh:
         digit_parts.append(d2)
     m.add(np.concatenate(digit_parts, axis=0))
 
-    # зубья привода
+    # drive teeth
     teeth = []
     for k in range(cfg.digit_count):
         tooth = make_box(
@@ -508,7 +508,7 @@ def build_drum(cfg: Config, role: str = "units") -> Mesh:
         teeth.append(tooth)
     m.add(np.concatenate(teeth, axis=0))
 
-    # зуб переноса (единицы → десятки, десятки → сотни)
+    # carry tooth (units → tens, tens → hundreds)
     if role in ("units", "tens", "middle"):
         angle = -2 * np.pi * 9 / cfg.digit_count + np.pi / 2
         t = make_box(3.0, 3.5, 4.0, (R + 1.5, 0, H * 0.8))
@@ -516,7 +516,7 @@ def build_drum(cfg: Config, role: str = "units") -> Mesh:
         Rz = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
         m.add(t @ Rz.T)
 
-    # приёмный зуб
+    # receiving tooth
     if role in ("tens", "middle", "hundreds"):
         angle = -2 * np.pi * 0 / cfg.digit_count + np.pi / 2
         t = make_box(3.0, 3.5, 4.0, (R + 1.5, 0, H * 0.8))
@@ -538,12 +538,12 @@ def drum_role(index: int, total: int) -> str:
 
 
 # ============================================================
-#  ОСЬ
+#  AXLE
 # ============================================================
 
 
 def build_axle(cfg: Config) -> Mesh:
-    log.info("Ось...")
+    log.info("Axle...")
     m = Mesh()
     length = cfg.housing_w + 2 * cfg.axle_protrude
     m.add(
@@ -554,49 +554,49 @@ def build_axle(cfg: Config) -> Mesh:
             center=(0, 0, -length / 2),
         )
     )
-    # буртик
+    # collar
     m.add(make_cylinder(cfg.axle_radius + 1.2, 2.0, 32, center=(0, 0, length / 2)))
     return m
 
 
 # ============================================================
-#  КОЛЬЦО
+#  RING
 # ============================================================
 
 
 def build_ring(cfg: Config) -> Mesh:
-    log.info("Стопорное кольцо...")
+    log.info("Retaining ring...")
     m = Mesh()
     m.add(make_torus(cfg.ring_major, cfg.ring_minor))
     return m
 
 
 # ============================================================
-#  КОРПУС
+#  HOUSING
 # ============================================================
 
 
 def build_housing(cfg: Config) -> Mesh:
-    log.info("Корпус...")
+    log.info("Housing...")
     m = Mesh()
     W, D, H = cfg.housing_w, cfg.housing_d, cfg.housing_h
     wall = cfg.wall
     centers = cfg.drum_centers_x()
 
-    # задняя, низ, верх
+    # back, bottom, top
     m.add(make_box(W, wall, H, (0, -D / 2 + wall / 2, 0)))
     m.add(make_box(W, D, wall, (0, 0, 0)))
     m.add(make_box(W, D, wall, (0, 0, H - wall)))
-    # боковые стенки
+    # side walls
     m.add(make_box(wall, D, H, (-W / 2 + wall / 2, 0, 0)))
     m.add(make_box(wall, D, H, (W / 2 - wall / 2, 0, 0)))
 
-    # перегородки между разрядами
+    # dividers between digits
     for i in range(len(centers) - 1):
         x = (centers[i] + centers[i + 1]) / 2
         m.add(make_box(wall, D, H, (x, 0, 0)))
 
-    # передняя стенка с окнами
+    # front wall with windows
     bot_h = (H - cfg.win_h) / 2
     side_w = (cfg.gap_between_drums) / 2 + 2
     for cx in centers:
@@ -612,38 +612,38 @@ def build_housing(cfg: Config) -> Mesh:
         )
         m.add(make_box(cfg.win_w, wall, bot_h, (cx, D / 2 - wall / 2, 0)))
         m.add(make_box(cfg.win_w, wall, bot_h, (cx, D / 2 - wall / 2, H - bot_h)))
-    # пазы под собачки
+    # pawl slots
     for cx in centers:
         m.add(make_box(cfg.win_w, wall, wall, (cx, -D / 2 + wall * 1.5, H / 2 - 8)))
     return m
 
 
 # ============================================================
-#  КРЫШКА
+#  COVER
 # ============================================================
 
 
 def build_cover(cfg: Config) -> Mesh:
-    log.info("Крышка...")
+    log.info("Cover...")
     m = Mesh()
     W, D, H = cfg.housing_w, cfg.housing_d, cfg.housing_h
     m.add(make_box(W - 0.4, D - 0.4, cfg.wall, (0, 0, H - cfg.wall / 2)))
-    # защёлки
+    # clips
     m.add(make_box(cfg.wall, cfg.wall, 4, (-W / 2 + 1, 0, H - cfg.wall - 2)))
     m.add(make_box(cfg.wall, cfg.wall, 4, (W / 2 - 1, 0, H - cfg.wall - 2)))
-    # отверстия под кнопки
+    # button holes
     for cx in cfg.drum_centers_x():
         m.add(make_box(6, 6, cfg.wall, (cx, 0, H - cfg.wall / 2)))
     return m
 
 
 # ============================================================
-#  СОБАЧКА
+#  PAWL
 # ============================================================
 
 
 def build_pawl(cfg: Config) -> Mesh:
-    log.info("Собачка...")
+    log.info("Pawl...")
     m = Mesh()
     m.add(make_box(6, 8, 3, (-8, 0, 0)))
     m.add(make_box(3, 5, 4, (-4, 0, 3)))
@@ -654,12 +654,12 @@ def build_pawl(cfg: Config) -> Mesh:
 
 
 # ============================================================
-#  ТРЕЩОТКА-ФИКСАТОР
+#  RATCHET STOP
 # ============================================================
 
 
 def build_ratchet_stop(cfg: Config) -> Mesh:
-    log.info("Трещотка-фиксатор...")
+    log.info("Ratchet stop...")
     m = Mesh()
     m.add(make_box(5, 6, 2, (-5, 0, 0)))
     m.add(make_box(12, 4, 1.5, (2, 0, 0)))
@@ -668,12 +668,12 @@ def build_ratchet_stop(cfg: Config) -> Mesh:
 
 
 # ============================================================
-#  КНОПКИ
+#  BUTTONS
 # ============================================================
 
 
 def build_plus_button(cfg: Config) -> Mesh:
-    log.info("Кнопка +1...")
+    log.info("+1 button...")
     m = Mesh()
     m.add(make_cylinder(2.8, 14.0, 32, (0, 0, 0)))
     m.add(make_cylinder(5.0, 3.0, 32, (0, 0, 14)))
@@ -684,7 +684,7 @@ def build_plus_button(cfg: Config) -> Mesh:
 
 
 def build_reset_button(cfg: Config) -> Mesh:
-    log.info("Кнопка сброса...")
+    log.info("Reset button...")
     m = Mesh()
     m.add(make_cylinder(2.8, 14.0, 32, (0, 0, 0)))
     m.add(make_cylinder(5.0, 3.0, 32, (0, 0, 14)))
@@ -695,15 +695,15 @@ def build_reset_button(cfg: Config) -> Mesh:
 
 
 # ============================================================
-#  ЭКСПОРТ STEP
+#  STEP EXPORT
 # ============================================================
 
 
 def export_step(cfg: Config, out_dir: str):
     if not HAS_CQ:
-        log.warning("cadquery не установлен — STEP пропущен")
+        log.warning("cadquery is not installed — skipping STEP")
         return
-    log.info("Экспорт STEP...")
+    log.info("Exporting STEP...")
     R, H = cfg.drum_radius, cfg.drum_length
     parts = {
         "drum_units.step": cq.Workplane("XY").circle(R).extrude(H),
@@ -722,7 +722,7 @@ def export_step(cfg: Config, out_dir: str):
 
 
 # ============================================================
-#  ВАЛИДАЦИЯ
+#  VALIDATION
 # ============================================================
 
 
@@ -732,20 +732,19 @@ def validate(m: Mesh, name: str, strict: bool = False):
     area = m.area()
     ok_man, bad_edges = m.is_manifold()
     log.info(
-        f"  {name}: {len(m):>6} треуг., "
-        f"{size[0]:5.1f}×{size[1]:5.1f}×{size[2]:5.1f} мм, "
-        f"площадь {area:8.1f} мм², "
-        f"манифолд={'✔' if ok_man else f'✘ ({bad_edges} рёбер)'}"
+        f"  {name}: {len(m):>6} tris, "
+        f"{size[0]:5.1f}×{size[1]:5.1f}×{size[2]:5.1f} mm, "
+        f"area {area:8.1f} mm², "
+        f"manifold={'✔' if ok_man else f'✘ ({bad_edges} edges)'}"
     )
     if strict and not ok_man:
         log.warning(
-            f"  {name}: обнаружены незамкнутые рёбра — "
-            f"STL может не залиться корректно в слайсере"
+            f"  {name}: open edges detected — " f"the STL may not slice correctly"
         )
 
 
 # ============================================================
-#  СБОРКА
+#  ASSEMBLY
 # ============================================================
 
 
@@ -776,17 +775,17 @@ def build_all(cfg: Config, out_dir: str, make_step: bool, make_png: bool):
     parts["reset_button"] = build_reset_button(cfg)
 
     log.info("=" * 60)
-    log.info("ВАЛИДАЦИЯ")
+    log.info("VALIDATION")
     log.info("=" * 60)
     for name, m in parts.items():
         validate(m, name, strict=False)
 
     log.info("=" * 60)
-    log.info("СОХРАНЕНИЕ")
+    log.info("SAVING")
     log.info("=" * 60)
     iterator = parts.items()
     if HAS_TQDM:
-        iterator = tqdm(list(iterator), desc="STL", unit="файл")
+        iterator = tqdm(list(iterator), desc="STL", unit="file")
     for name, m in iterator:
         m.save_stl(os.path.join(out_dir, f"{name}.stl"))
         if make_png:
@@ -796,36 +795,34 @@ def build_all(cfg: Config, out_dir: str, make_step: bool, make_png: bool):
         export_step(cfg, out_dir)
 
     log.info("=" * 60)
-    log.info(
-        f"ГОТОВО за {time.time() - t0:.1f} с. " f"Файлы: {os.path.abspath(out_dir)}"
-    )
+    log.info(f"DONE in {time.time() - t0:.1f} s. " f"Files: {os.path.abspath(out_dir)}")
     log.info("=" * 60)
 
 
 # ============================================================
-#  СХЕМА
+#  DIAGRAM
 # ============================================================
 
 SCHEME = r"""
 ╔══════════════════════════════════════════════════════════════════╗
-║  МЕХАНИЧЕСКИЙ СЧЁТЧИК — СХЕМА СБОРКИ                              ║
+║  MECHANICAL COUNTER — ASSEMBLY DIAGRAM                            ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                  ║
-║  ПРИНЦИП:                                                        ║
-║    Кнопка [+1] → собачка → барабан единиц (1 шаг).               ║
-║    Переход 9→0 → зуб переноса → барабан следующего разряда.      ║
-║    Трещотка-фиксатор блокирует обратный ход.                     ║
-║    Кнопка [СБРОС] → все барабаны в 0.                            ║
+║  PRINCIPLE:                                                      ║
+║    [+1] button → pawl → units drum (1 step).                     ║
+║    9→0 rollover → carry tooth → next digit drum.                 ║
+║    Ratchet stop blocks reverse rotation.                         ║
+║    [RESET] button → all drums back to 0.                         ║
 ║                                                                  ║
-║  ПЕЧАТЬ:                                                         ║
-║    Материал: PETG (пружины) / PLA (корпус)                       ║
-║    Слой: 0.16 мм  •  Заполнение: 20% (пружины 40%)               ║
-║    Поддержки: выключены                                          ║
+║  PRINTING:                                                       ║
+║    Material: PETG (springs) / PLA (housing)                      ║
+║    Layer: 0.16 mm  •  Infill: 20% (springs 40%)                  ║
+║    Supports: disabled                                            ║
 ║                                                                  ║
-║  ПОСТОБРАБОТКА:                                                  ║
-║    • Отверстия корпуса — сверло Ø4,1 мм                          ║
-║    • Цифры — акриловая краска для контраста                      ║
-║    • Оси — капля PTFE-смазки                                     ║
+║  POST-PROCESSING:                                                ║
+║    • Housing holes — Ø4.1 mm drill bit                           ║
+║    • Digits — acrylic paint for contrast                         ║
+║    • Axles — a drop of PTFE grease                               ║
 ║                                                                  ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
@@ -843,13 +840,13 @@ def run_stl(
     make_png: bool = False,
     quiet: bool = False,
 ) -> None:
-    """Генерация STL-деталей (вызывается из CLI-диспетчера)."""
+    """Generate STL parts (called from the CLI dispatcher)."""
     if quiet:
         log.setLevel(logging.WARNING)
     cfg = Config(digits=digits)
     log.info(
-        f"Конфигурация: разрядов={cfg.digits}, "
-        f"корпус {cfg.housing_w:.0f}×{cfg.housing_d:.0f}×{cfg.housing_h:.0f} мм"
+        f"Configuration: digits={cfg.digits}, "
+        f"housing {cfg.housing_w:.0f}×{cfg.housing_d:.0f}×{cfg.housing_h:.0f} mm"
     )
     build_all(cfg, out, make_step=make_step, make_png=make_png)
     print(SCHEME)
@@ -857,21 +854,21 @@ def run_stl(
 
 def main():
     p = argparse.ArgumentParser(
-        description="Генератор механического счётчика для 3D-печати."
+        description="Mechanical counter generator for 3D printing."
     )
     p.add_argument(
         "--digits",
         type=int,
         default=3,
         choices=[1, 2, 3, 4],
-        help="Число разрядов (по умолчанию 3)",
+        help="Number of digits (default 3)",
     )
-    p.add_argument("--out", default="stl", help="Папка для STL")
-    p.add_argument("--no-step", action="store_true", help="Не экспортировать STEP")
-    p.add_argument("--png", action="store_true", help="Сохранить PNG-превью")
-    p.add_argument("--test", action="store_true", help="Автотест и выход")
-    p.add_argument("--scheme", action="store_true", help="Показать схему сборки")
-    p.add_argument("-q", "--quiet", action="store_true", help="Меньше логов")
+    p.add_argument("--out", default="stl", help="Output folder for STL")
+    p.add_argument("--no-step", action="store_true", help="Do not export STEP")
+    p.add_argument("--png", action="store_true", help="Save PNG preview")
+    p.add_argument("--test", action="store_true", help="Run self-test and exit")
+    p.add_argument("--scheme", action="store_true", help="Show assembly diagram")
+    p.add_argument("-q", "--quiet", action="store_true", help="Less logging")
     args = p.parse_args()
 
     if args.quiet:
@@ -884,7 +881,7 @@ def main():
     cfg = Config(digits=args.digits)
 
     if args.test:
-        log.info("Автотест...")
+        log.info("Self-test...")
         for i in range(cfg.digits):
             role = drum_role(i, cfg.digits)
             m = build_drum(cfg, role)
@@ -897,12 +894,12 @@ def main():
         ]:
             m = builder(cfg)
             validate(m, name, strict=False)
-        log.info("✔ Автотест пройден")
+        log.info("✔ Self-test passed")
         return
 
     log.info(
-        f"Конфигурация: разрядов={cfg.digits}, "
-        f"корпус {cfg.housing_w:.0f}×{cfg.housing_d:.0f}×{cfg.housing_h:.0f} мм"
+        f"Configuration: digits={cfg.digits}, "
+        f"housing {cfg.housing_w:.0f}×{cfg.housing_d:.0f}×{cfg.housing_h:.0f} mm"
     )
     build_all(cfg, args.out, make_step=not args.no_step, make_png=args.png)
     print(SCHEME)

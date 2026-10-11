@@ -1,17 +1,17 @@
 .PHONY: help install install-dev test lint format clean build publish stl animate ci
 
 help:
-	@echo "Доступные команды:"
-	@echo "  make install       — установка пакета"
-	@echo "  make install-dev   — установка с dev-зависимостями"
-	@echo "  make test          — запуск pytest"
+	@echo "Available commands:"
+	@echo "  make install       — install the package"
+	@echo "  make install-dev   — install with dev dependencies"
+	@echo "  make test          — run pytest"
 	@echo "  make lint          — flake8 + mypy"
 	@echo "  make format        — black + isort"
-	@echo "  make stl           — генерация STL (3 разряда)"
-	@echo "  make animate       — полная анимация"
-	@echo "  make clean         — очистка артефактов"
-	@echo "  make build         — сборка wheel"
-	@echo "  make ci            — всё для CI"
+	@echo "  make stl           — generate STL (3 digits)"
+	@echo "  make animate       — full animation"
+	@echo "  make clean         — remove build artifacts"
+	@echo "  make build         — build a wheel"
+	@echo "  make ci            — everything for CI"
 
 install:
 	pip install -e .

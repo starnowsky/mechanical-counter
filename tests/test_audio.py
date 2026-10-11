@@ -1,4 +1,4 @@
-"""Тесты звука."""
+"""Audio tests."""
 
 import numpy as np
 

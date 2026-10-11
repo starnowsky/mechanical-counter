@@ -1,33 +1,33 @@
 # Changelog
 
-Все значимые изменения. Формат: [Keep a Changelog](https://keepachangelog.com/).
+All notable changes. Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
 ## [1.0.0] — 2026-10-10
 
 ### Added
-- Генерация STL всех деталей счётчика (1–4 разряда)
-- Проверка манифолдности меша
-- Экспорт STEP (опционально, через cadquery)
-- Анимация сборки / разборки
-- Анимация работы механизма со шаговым вращением 36°
-- PyVista-бэкенд (быстрый) + matplotlib-бэкенд (fallback)
-- Split-screen из 3 камер (iso / front / top)
-- Синтез звуков (щелчки, гул, сигнал переполнения)
-- CLI с подкомандами `stl` и `animate`
-- Прозрачный корпус в режиме работы
-- PBR-материалы, SSAO, тени
-- PNG-превью каждой детали
-- Docker-образ для headless рендера
+- STL generation for all counter parts (1–4 digits)
+- Mesh manifold validation
+- STEP export (optional, via cadquery)
+- Assembly / disassembly animation
+- Mechanism operation animation with 36° stepwise rotation
+- PyVista backend (fast) + matplotlib backend (fallback)
+- Split-screen with 3 cameras (iso / front / top)
+- Sound synthesis (clicks, hum, overflow chime)
+- CLI with `stl` and `animate` subcommands
+- Transparent housing in operation mode
+- PBR materials, SSAO, shadows
+- PNG preview for each part
+- Docker image for headless rendering
 
 ### Fixed
 - VTK warnings `Framebuffer Object not bound` (multi_samples=0)
-- `vtk.util` не импортировался
-- `multi_samples` убран в PyVista 0.44+
-- `add_text(name=...)` убран в новых PyVista
+- `vtk.util` was not imported
+- `multi_samples` removed in PyVista 0.44+
+- `add_text(name=...)` removed in newer PyVista
 
 ## [0.1.0] — 2026-09-01
 
 ### Added
-- Прототип генератора STL
+- STL generator prototype

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Сцена для анимации: детали счётчика с двумя позициями."""
+"""Animation scene: counter parts with assembled and exploded positions."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from counter.geometry import (
 
 @dataclass
 class Part:
-    """Деталь с собранной и «разлетевшейся» позициями."""
+    """A part with assembled and exploded positions."""
 
     name: str
     mesh: Mesh
@@ -36,10 +36,10 @@ class Part:
     is_transparent: bool = False
 
     def transformed(self, t: float, mode: str = "explode") -> np.ndarray:
-        """Позиция детали во время t (N, 3, 3).
+        """Part position at time t (N, 3, 3).
 
-        mode="explode":   t=0 → разлёт, t=1 → сборка.
-        mode="disassemble": t=0 → сборка, t=1 → разлёт.
+        mode="explode":      t=0 → exploded, t=1 → assembled.
+        mode="disassemble":  t=0 → assembled, t=1 → exploded.
         """
         if mode == "disassemble":
             k = float(t)
@@ -49,12 +49,12 @@ class Part:
 
 
 def _drum_explode_offsets(n: int) -> List[np.ndarray]:
-    """Векторы разлёта для N барабанов (веером вверх по Z)."""
+    """Explosion offsets for N drums (fanning upward along Z)."""
     return [np.array([0.0, 0.0, 24.0 + 8.0 * i]) for i in range(n)]
 
 
 def build_scene(cfg: Config) -> List[Part]:
-    """Собирает список деталей для анимации (11 деталей для 3 разрядов)."""
+    """Builds the list of parts for animation (11 parts for 3 digits)."""
     centers = cfg.drum_centers_x()
     pivot_z = cfg.housing_h / 2.0
     drum_names = ["drum_units", "drum_tens", "drum_hundreds", "drum_thousands"]

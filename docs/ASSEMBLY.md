@@ -1,54 +1,54 @@
-# Сборка счётчика
+# Counter assembly
 
-## 🖨 Печать
+## 🖨 Printing
 
-### Материалы
+### Materials
 
-| Деталь | Материал | Почему |
+| Part | Material | Why |
 |---|---|---|
-| Корпус, крышка | PLA | жёсткий, точный |
-| Барабаны, ось | PETG | скольжение |
-| Собачка, трещотка | PETG | упругость |
-| Кнопки | PETG | пружинят |
+| Housing, cover | PLA | rigid, precise |
+| Drums, axle | PETG | sliding |
+| Pawl, ratchet | PETG | elasticity |
+| Buttons | PETG | springy |
 
-### Параметры печати
+### Print settings
 
-- **Слой:** 0.16 мм (0.12 для мелких деталей)
-- **Стенки:** 3 периметра
-- **Заполнение:** 20% (пружины 40%)
-- **Поддержки:** выключены
-- **Brim:** 5 мм для кнопок
+- **Layer:** 0.16 mm (0.12 for small parts)
+- **Walls:** 3 perimeters
+- **Infill:** 20% (springs 40%)
+- **Supports:** disabled
+- **Brim:** 5 mm for buttons
 
-## 🔧 Сборка
+## 🔧 Assembly
 
-1. **Барабаны на ось**
-   - Вдень ось в отверстия барабанов
-   - Расстояние между барабанами: 4 мм
-2. **Установка в корпус**
-   - Вставь ось с барабанами в пазы корпуса
-   - Проверь свободное вращение
-3. **Собачка**
-   - Установи в паз, пружина должна давить на зубья
-4. **Трещотка-фиксатор**
-   - В задний паз, на последнем барабане
-5. **Стопорное кольцо**
-   - Надень на ось, зафиксируй барабаны
-6. **Крышка**
-   - Защёлкни на корпус
-7. **Кнопки**
-   - Вставь через отверстия в крышке
+1. **Drums onto the axle**
+   - Thread the axle through the drum holes
+   - Distance between drums: 4 mm
+2. **Mounting into the housing**
+   - Insert the axle with drums into the housing slots
+   - Check that it rotates freely
+3. **Pawl**
+   - Fit it into its slot; the spring should press against the teeth
+4. **Ratchet stop**
+   - Into the rear slot, on the last drum
+5. **Retaining ring**
+   - Put it on the axle to lock the drums
+6. **Cover**
+   - Snap it onto the housing
+7. **Buttons**
+   - Insert them through the holes in the cover
 
-## 🎨 Постобработка
+## 🎨 Post-processing
 
-- **Отверстия** — сверло Ø4.1 мм
-- **Цифры** — акриловая краска (белая), дать высохнуть
-- **Оси** — капля PTFE-смазки
-- **Пружины** — не смазывать
+- **Holes** — Ø4.1 mm drill bit
+- **Digits** — acrylic paint (white), let dry
+- **Axles** — a drop of PTFE grease
+- **Springs** — do not grease
 
-## ⚠️ Частые проблемы
+## ⚠️ Common issues
 
-| Проблема | Решение |
+| Problem | Solution |
 |---|---|
-| Барабаны туго идут | Рассверлить отверстие +0.1 мм |
-| Собачка проскакивает | Увеличить толщину зуба в конфиге |
-| Кнопка не возвращается | Печатать PETG при 240°C |
+| Drums turn too tight | Ream the hole +0.1 mm |
+| Pawl slips | Increase the tooth thickness in the config |
+| Button does not return | Print PETG at 240 °C |

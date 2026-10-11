@@ -1,4 +1,4 @@
-"""Тесты геометрии."""
+"""Geometry tests."""
 
 import numpy as np
 import pytest
@@ -13,7 +13,7 @@ def test_make_box_vertex_count():
 
 
 def test_make_box_area():
-    # коробка 10×10×10, площадь = 6 * 100 = 600
+    # 10×10×10 box, area = 6 * 100 = 600
     tri = make_box(10, 10, 10)
     v = tri
     a, b, c = v[:, 0], v[:, 1], v[:, 2]
@@ -28,7 +28,7 @@ def test_make_cylinder_area():
     a, b, c = tri[:, 0], tri[:, 1], tri[:, 2]
     cross = np.cross(b - a, c - a)
     area = 0.5 * np.linalg.norm(cross, axis=1).sum()
-    # площадь цилиндра: 2πrh + 2πr²
+    # cylinder area: 2πrh + 2πr²
     expected = 2 * np.pi * r * h + 2 * np.pi * r**2
     assert abs(area - expected) / expected < 0.01
 
@@ -39,7 +39,7 @@ def test_tube_manifold():
     m = Mesh()
     m.add(make_tube(10, 6, 20, segments=64))
     ok, bad = m.is_manifold()
-    assert ok, f"{bad} висячих рёбер"
+    assert ok, f"{bad} dangling edges"
 
 
 @pytest.mark.parametrize("digits", [1, 2, 3, 4])

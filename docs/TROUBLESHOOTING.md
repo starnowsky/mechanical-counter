@@ -4,61 +4,61 @@
 
 ### `Attempt to set draw buffers from a Framebuffer Object that is not bound`
 
-**Причина:** VTK 9.3 на Linux + MSAA.
+**Cause:** VTK 9.3 on Linux + MSAA.
 
-**Решение:**
+**Solution:**
 ```python
-pv.Plotter(multi_samples=0)   # ← отключить MSAA
-# или
+pv.Plotter(multi_samples=0)   # ← disable MSAA
+# or
 plotter.renderer.SetMultiSamples(0)
 ```
 
 ### `module 'vtk' has no attribute 'util'`
 
-**Причина:** новые VTK не подгружают `vtk.util` автоматически.
+**Cause:** newer VTK does not import `vtk.util` automatically.
 
-**Решение:**
+**Solution:**
 ```python
 import vtk
-from vtk.util import numpy_support   # ← явно
+from vtk.util import numpy_support   # ← explicitly
 ```
 
 ### `Plotter.__init__() got an unexpected keyword argument 'multi_samples'`
 
-**Причина:** PyVista 0.44+ убрал параметр.
+**Cause:** PyVista 0.44+ removed the parameter.
 
-**Решение:**
+**Solution:**
 ```python
 self.plotter = pv.Plotter(off_screen=True, window_size=resolution)
 self.plotter.renderer.SetMultiSamples(0)
 ```
 
-### Картинка чёрная
+### Black image
 
-**Решение:**
+**Solution:**
 ```bash
 export VTK_DEFAULT_OPENGL_WINDOW=vtkEGLRenderWindow
 export LIBGL_ALWAYS_SOFTWARE=1
 ```
 
-Или через `xvfb`:
+Or via `xvfb`:
 ```bash
 xvfb-run -a -s "-screen 0 1280x720x24" mc animate --fast
 ```
 
-### Рендер очень медленный (>100 мс/кадр)
+### Rendering is very slow (>100 ms/frame)
 
-**Причина:** CPU-рендер (Mesa llvmpipe) вместо GPU.
+**Cause:** CPU rendering (Mesa llvmpipe) instead of GPU.
 
-**Решение:**
+**Solution:**
 ```bash
-# проверить
+# check
 python -c "import pyvista as pv; pv.OFF_SCREEN=True; p=pv.Plotter(); print(p.ren_win.GetClassName())"
 
-# должно быть vtkEGLRenderWindow или vtkXOpenGLRenderWindow
+# should be vtkEGLRenderWindow or vtkXOpenGLRenderWindow
 ```
 
-Если `vtkOSOpenGLRenderWindow` — установи:
+If `vtkOSOpenGLRenderWindow` — install:
 ```bash
 apt install libegl1-mesa libgl1-mesa-dri
 export VTK_DEFAULT_OPENGL_WINDOW=vtkEGLRenderWindow
@@ -73,20 +73,20 @@ apt install ffmpeg        # Linux
 brew install ffmpeg       # macOS
 ```
 
-### MP4 не создаётся
+### MP4 is not created
 
-Проверь:
+Check:
 ```bash
 ffmpeg -codecs | grep libx264
 ```
 
-Если пусто — переустанови с флагом `--enable-libx264`.
+If empty — reinstall with the `--enable-libx264` flag.
 
 ## Python
 
 ### `NameError: name 'Config' is not defined`
 
-Проверь импорты в верхней части файла:
+Check the imports at the top of the file:
 ```python
 from counter import Config
 ```
@@ -95,21 +95,21 @@ from counter import Config
 
 ```bash
 pip install -e .
-# или
+# or
 cd counter_project
 python -m counter --help
 ```
 
-## Печать
+## Printing
 
-### Барабаны не вращаются
+### Drums do not rotate
 
-- Проверь зазор барабан-ось: должен быть 0.15–0.2 мм
-- Смажь ось PTFE
-- Рассверлить отверстие сверлом на 0.1 мм больше
+- Check the drum-axle clearance: should be 0.15–0.2 mm
+- Grease the axle with PTFE
+- Ream the hole with a drill bit 0.1 mm larger
 
-### Цифры плохо видны
+### Digits are hard to read
 
-- Печатай барабаны в **белом** PETG
-- Заполни вдавленные цифры чёрной краской
-- Или наоборот — печатай чёрным, крась белым
+- Print the drums in **white** PETG
+- Fill the recessed digits with black paint
+- Or vice versa — print black, paint white

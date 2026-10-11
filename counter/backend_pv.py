@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PyVista-бэкенд (быстрый off-screen 3D-рендер)."""
+"""PyVista backend (fast off-screen 3D rendering)."""
 
 from __future__ import annotations
 
@@ -22,11 +22,11 @@ log = logging.getLogger("backend_pv")
 
 
 class PVBackend:
-    """Рендер через PyVista/VTK."""
+    """Renderer backed by PyVista/VTK."""
 
     def __init__(self, resolution: Tuple[int, int] = (1280, 720), fast: bool = False):
         if not HAS_PV:
-            raise RuntimeError("PyVista не установлен: pip install pyvista vtk")
+            raise RuntimeError("PyVista is not installed: pip install pyvista vtk")
         self.resolution = resolution
         self.fast = fast
         self._meshes: Dict[str, "pv.PolyData"] = {}

@@ -1,32 +1,32 @@
 ---
 name: 🐛 Bug report
-about: Сообщить о проблеме
+about: Report a problem
 title: "[BUG] "
 labels: bug
 assignees: ''
 ---
 
-## 🐛 Описание проблемы
+## 🐛 Problem description
 
-Кратко, что не работает.
+Briefly describe what is not working.
 
-## 🔁 Воспроизведение
+## 🔁 Reproduction
 
-Шаги:
+Steps:
 1. `mc stl --digits 3`
 2. ...
-3. Ошибка
+3. Error
 
-## 📋 Ожидаемое поведение
+## 📋 Expected behavior
 
-Что должно было быть.
+What should have happened.
 
-## 💻 Окружение
+## 💻 Environment
 
-- OS: [например, Ubuntu 22.04]
-- Python: [например, 3.11.5]
-- Версия пакета: `pip show mechanical-counter`
+- OS: [e.g., Ubuntu 22.04]
+- Python: [e.g., 3.11.5]
+- Package version: `pip show mechanical-counter`
 - Backend: [pyvista / matplotlib]
-- GPU: [NVIDIA RTX 3060 / нет]
+- GPU: [NVIDIA RTX 3060 / none]
 
-## 📎 Логи
+## 📎 Logs

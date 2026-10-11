@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Камеры и split-screen компоновка кадров."""
+"""Camera presets and split-screen frame compositing."""
 
 from __future__ import annotations
 
@@ -18,13 +18,13 @@ PRESETS = {
 
 
 def apply_preset(backend, preset: str = "iso") -> None:
-    """Направляет камеру по пресету (iso/front/top/side)."""
+    """Point the camera at a preset (iso/front/top/side)."""
     position, viewup = PRESETS.get(preset, PRESETS["iso"])
     backend.set_camera(position=position, viewup=viewup, focal_point=(0.0, 0.0, 0.0))
 
 
 def auto_distance(cfg: Config) -> float:
-    """Подбирает дистанцию камеры по габаритам сцены."""
+    """Pick a camera distance based on the scene bounds."""
     size = max(cfg.housing_w, cfg.housing_d, cfg.housing_h)
     return size * 1.8 + 60.0
 
@@ -39,7 +39,7 @@ def _as_rgb(img: np.ndarray) -> np.ndarray:
 
 
 def _resize(img: np.ndarray, tw: int, th: int) -> np.ndarray:
-    """Быстрое nearest-neighbor изменение размера."""
+    """Fast nearest-neighbor resize."""
     img = _as_rgb(img)
     ih, iw = img.shape[:2]
     if ih == 0 or iw == 0 or tw <= 0 or th <= 0:
@@ -54,7 +54,7 @@ def split_screen_multi(
     layout: str = "lshape",
     size: Tuple[int, int] = (1280, 720),
 ) -> List[np.ndarray]:
-    """Склеивает кадры нескольких камер в один (lshape/hstack/vstack/grid)."""
+    """Composite frames from several cameras (lshape/hstack/vstack/grid)."""
     n_cams = len(frames_per_cam)
     if n_cams == 0:
         return []

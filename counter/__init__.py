@@ -1,4 +1,4 @@
-"""Mechanical Counter — генератор STL и аниматор для 3D-печати."""
+"""Mechanical Counter — STL generator and animator for 3D printing."""
 
 __version__ = "1.0.0"
 __author__ = "Your Name"

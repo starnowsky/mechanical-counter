@@ -1,14 +1,15 @@
 """
-Пример: простая анимация без звука и split-screen.
+Example: simple animation without sound and split-screen.
 
-Запуск:
+Run:
     python examples/02_simple_animation.py
 """
-from counter import Config
-from counter.scene import build_scene
-from counter.backend_pv import PVBackend
+
 import imageio.v2 as imageio
-import numpy as np
+
+from counter import Config
+from counter.backend_pv import PVBackend
+from counter.scene import build_scene
 
 cfg = Config(digits=3)
 parts = build_scene(cfg)
@@ -19,10 +20,10 @@ backend.add_parts(parts)
 frames = []
 for i in range(60):
     t = i / 59
-    # простая интерполяция разлёта
+    # simple exploded-position interpolation
     for p in parts:
         v = p.transformed(t, "explode")
-        # обновляем точки
+        # update the points
         m = backend._meshes.get(p.name)
         if m is not None:
             m.points = v.reshape(-1, 3)

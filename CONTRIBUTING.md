@@ -1,11 +1,11 @@
 # Contributing
 
-## Как помочь
+## How to help
 
-- 🐛 **Баги** — [Issues](https://github.com/USERNAME/mechanical-counter/issues/new?template=bug_report.md)
-- 💡 **Идеи** — [Issues](https://github.com/USERNAME/mechanical-counter/issues/new?template=feature_request.md)
-- 📝 **Код** — Pull Request
-- 🖨 **Фото сборок** — присылайте в Issues или Discussions
+- 🐛 **Bugs** — [Issues](https://github.com/USERNAME/mechanical-counter/issues/new?template=bug_report.md)
+- 💡 **Ideas** — [Issues](https://github.com/USERNAME/mechanical-counter/issues/new?template=feature_request.md)
+- 📝 **Code** — Pull Request
+- 🖨 **Assembly photos** — send them via Issues or Discussions
 
 ## Development
 
@@ -14,30 +14,30 @@ git clone https://github.com/USERNAME/mechanical-counter.git
 cd mechanical-counter
 pip install -e ".[all,dev]"
 
-make test      # тесты
+make test      # tests
 make lint      # flake8 + mypy
 make format    # black + isort
 ```
 
-## Процесс PR
+## PR process
 
-1. Форкнуть репозиторий
-2. Ветка: `feature/my-feature` или `fix/my-bug`
-3. Коммиты по [Conventional Commits](https://www.conventionalcommits.org/):
+1. Fork the repository
+2. Branch: `feature/my-feature` or `fix/my-bug`
+3. Commits using [Conventional Commits](https://www.conventionalcommits.org/):
    - `feat: add 5-digit support`
    - `fix: correct drum rotation`
    - `docs: update assembly guide`
-4. `make ci` — должно пройти
-5. Pull Request → описание + скриншоты/видео
+4. `make ci` — must pass
+5. Pull Request → description + screenshots/video
 
-## Стиль кода
+## Code style
 
-- **black** (88 символов)
+- **black** (88 characters)
 - **isort** (profile=black)
-- **mypy** (без строгих ошибок)
-- Docstrings на русском или английском
-- Type hints обязательны для публичных функций
+- **mypy** (no strict errors)
+- Docstrings in English
+- Type hints required for public functions
 
-## Тесты
+## Tests
 
-Каждая новая функция — тест. Покрытие не должно падать.
+Every new function needs a test. Coverage must not decrease.

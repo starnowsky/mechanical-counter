@@ -1,20 +1,20 @@
-## 📝 Что изменено
+## 📝 What changed
 
-Краткое описание.
+Short description.
 
-## 🎯 Зачем
+## 🎯 Why
 
-Ссылка на issue: #123
+Linked issue: #123
 
-## ✅ Чек-лист
+## ✅ Checklist
 
-- [ ] Тесты добавлены/обновлены
-- [ ] `make test` проходит
-- [ ] `make lint` проходит
-- [ ] `make format` применён
-- [ ] Документация обновлена (если нужно)
-- [ ] CHANGELOG.md обновлён
+- [ ] Tests added/updated
+- [ ] `make test` passes
+- [ ] `make lint` passes
+- [ ] `make format` applied
+- [ ] Documentation updated (if needed)
+- [ ] CHANGELOG.md updated
 
-## 📷 Скриншоты / видео
+## 📷 Screenshots / video
 
-Если UI/рендер изменился.
+If UI/render changed.

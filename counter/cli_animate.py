@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Совместимый модуль для examples/03_full_showcase.py."""
+"""Compatibility module for examples/03_full_showcase.py."""
 
 from counter.cli import AnimConfig
 

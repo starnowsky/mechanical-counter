@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 """
-Полный рендер-пайплайн: PyVista + прозрачность + split-screen + звук.
+Full render pipeline: PyVista + transparency + split-screen + sound.
 """
 
 import argparse
@@ -16,14 +16,14 @@ from typing import List, Optional, Tuple
 import numpy as np
 from tqdm import tqdm
 
-# ---------- ОБЯЗАТЕЛЬНЫЕ ИМПОРТЫ ПРОЕКТА ----------
+# ---------- PROJECT IMPORTS ----------
 from counter import Config, __version__
 from counter.scene import build_scene
 
 try:
     from counter.backend_pv import HAS_PV, PVBackend
 except Exception as _e:
-    print("PyVista backend не загружен:", _e)
+    print("PyVista backend failed to load:", _e)
     HAS_PV = False
 
 from counter.audio import build_track, click, motor_hum, overflow_chime, save_wav
@@ -40,7 +40,7 @@ log = logging.getLogger("anim")
 
 
 # ============================================================
-#  КОНФИГ АНИМАЦИИ
+#  ANIMATION CONFIG
 # ============================================================
 
 
@@ -59,7 +59,7 @@ class AnimConfig:
 
 
 # ============================================================
-#  ПОШАГОВОЕ ВРАЩЕНИЕ БАРАБАНА (36° + overshoot)
+#  STEPWISE DRUM ROTATION (36° + overshoot)
 # ============================================================
 
 
@@ -78,7 +78,7 @@ def drum_step_angle(t: float, digit: int, cfg: Config, slow_step: bool) -> float
 
 
 # ============================================================
-#  ГЕНЕРАЦИЯ ВСЕХ КАДРОВ (батч-склейка, VTK-тихий)
+#  FRAME GENERATION (batched compositing, quiet VTK)
 # ============================================================
 
 
@@ -93,10 +93,10 @@ def render_all(
     frame_idx = 0
     n_drums = len(cfg.drum_centers_x())
 
-    # ---------- фаза 1: сборка ----------
+    # ---------- phase 1: assembly ----------
     n_explode = int(ac.duration_explode * ac.fps)
-    log.info(f"Фаза 1: сборка ({n_explode} кадров, {len(cameras) or 1} камер)")
-    for i in tqdm(range(n_explode), desc="сборка"):
+    log.info(f"Phase 1: assembly ({n_explode} frames, {len(cameras) or 1} camera(s))")
+    for i in tqdm(range(n_explode), desc="assembly"):
         t = i / max(n_explode - 1, 1)
         imgs = _render_one(backend, parts, cfg, ac, "explode", t, cameras=cameras)
         for k, img in enumerate(imgs):
@@ -105,18 +105,18 @@ def render_all(
             audio_events.append((frame_idx, click(1800, 0.04, 0.35)))
         frame_idx += 1
 
-    # ---------- фаза 2: пауза ----------
+    # ---------- phase 2: hold ----------
     n_hold = int(ac.duration_hold * ac.fps)
     for k in range(len(frames_per_cam)):
         last = frames_per_cam[k][-1]
         frames_per_cam[k].extend([last] * n_hold)
     frame_idx += n_hold
 
-    # ---------- фаза 3: работа ----------
+    # ---------- phase 3: operation ----------
     n_oper = int(ac.duration_operate * ac.fps)
-    log.info(f"Фаза 3: работа ({n_oper} кадров)")
+    log.info(f"Phase 3: operation ({n_oper} frames)")
     prev_total = 0
-    for i in tqdm(range(n_oper), desc="работа"):
+    for i in tqdm(range(n_oper), desc="operation"):
         t = i / max(n_oper - 1, 1)
         total = int(round(t * final_value))
         values = {"total": total}
@@ -142,10 +142,10 @@ def render_all(
             audio_events.append((frame_idx, motor_hum(0.15, 0.03)))
         frame_idx += 1
 
-    # ---------- фаза 4: разборка ----------
+    # ---------- phase 4: disassembly ----------
     n_dis = int(ac.duration_disassemble * ac.fps)
-    log.info(f"Фаза 4: разборка ({n_dis} кадров)")
-    for i in tqdm(range(n_dis), desc="разборка"):
+    log.info(f"Phase 4: disassembly ({n_dis} frames)")
+    for i in tqdm(range(n_dis), desc="disassembly"):
         t = i / max(n_dis - 1, 1)
         imgs = _render_one(backend, parts, cfg, ac, "disassemble", t, cameras=cameras)
         for k, img in enumerate(imgs):
@@ -154,9 +154,9 @@ def render_all(
 
     backend.close()
 
-    # ---------- склейка ОДИН РАЗ ----------
+    # ---------- composite ONCE ----------
     if len(cameras) > 1 and ac.layout != "none":
-        log.info(f"Split-screen: {ac.layout} ({frame_idx} кадров)")
+        log.info(f"Split-screen: {ac.layout} ({frame_idx} frames)")
         frames = split_screen_multi(
             frames_per_cam, layout=ac.layout, size=ac.resolution
         )
@@ -218,11 +218,11 @@ def _render_one(
     )
 
     if mode == "operate":
-        backend.add_title(f"РАБОТА   •   значение = {values.get('total', 0):03d}")
+        backend.add_title(f"OPERATION   •   value = {values.get('total', 0):03d}")
     elif mode == "explode":
-        backend.add_title("СБОРКА")
+        backend.add_title("ASSEMBLY")
     else:
-        backend.add_title("РАЗБОРКА")
+        backend.add_title("DISASSEMBLY")
 
     imgs = []
     dist = auto_distance(cfg) * 1.6
@@ -239,13 +239,13 @@ def _render_one(
 
 
 # ============================================================
-#  СОХРАНЕНИЕ ВИДЕО + ЗВУК
+#  VIDEO + AUDIO SAVING
 # ============================================================
 
 
 def save_video(frames, path, fps):
     if not HAS_IMAGEIO:
-        log.warning("imageio не установлен — сохраняю PNG-кадры")
+        log.warning("imageio is not installed — saving PNG frames")
         os.makedirs(path + "_frames", exist_ok=True)
         for i, f in enumerate(frames[:: max(1, len(frames) // 30)]):
             imageio.imsave(f"{path}_frames/f{i:04d}.png", f) if HAS_IMAGEIO else None
@@ -259,7 +259,7 @@ def save_video(frames, path, fps):
         )
     else:
         imageio.mimsave(path + ".gif", frames, fps=fps, loop=0)
-    log.info(f"Видео: {path} ({os.path.getsize(path)/1024/1024:.2f} МБ)")
+    log.info(f"Video: {path} ({os.path.getsize(path)/1024/1024:.2f} MB)")
 
 
 def mux_audio(video_path, wav_path, out_path):
@@ -282,9 +282,9 @@ def mux_audio(video_path, wav_path, out_path):
             check=True,
             capture_output=True,
         )
-        log.info(f"✔ Видео со звуком: {out_path}")
+        log.info(f"✔ Video with audio: {out_path}")
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        log.warning(f"ffmpeg недоступен: {e}. Видео без звука.")
+        log.warning(f"ffmpeg unavailable: {e}. Video will have no audio.")
 
 
 # ============================================================
@@ -298,9 +298,9 @@ def run_animation(
     out: str = "out/showcase.mp4",
     final_value: Optional[int] = None,
 ) -> str:
-    """Полный пайплайн: сцена → кадры → видео (+ звук)."""
+    """Full pipeline: scene → frames → video (+ audio)."""
     if not HAS_PV:
-        raise RuntimeError("PyVista не установлен. pip install pyvista vtk")
+        raise RuntimeError("PyVista is not installed. pip install pyvista vtk")
 
     if final_value is None:
         final_value = 10**cfg.digits - 1
@@ -311,15 +311,15 @@ def run_animation(
     t0 = time.time()
     frames, audio_events = render_all(parts, cfg, ac, cameras, final_value)
     log.info(
-        f"Рендер: {len(frames)} кадров за {time.time()-t0:.1f} с "
-        f"({(time.time()-t0)/len(frames)*1000:.0f} мс/кадр)"
+        f"Render: {len(frames)} frames in {time.time()-t0:.1f} s "
+        f"({(time.time()-t0)/len(frames)*1000:.0f} ms/frame)"
     )
 
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     save_video(frames, out, ac.fps)
 
     if ac.with_audio and audio_events:
-        log.info(f"Звук: {len(audio_events)} событий")
+        log.info(f"Audio: {len(audio_events)} events")
         track = build_track(ac.fps, len(frames), audio_events)
         wav_path = os.path.splitext(out)[0] + ".wav"
         save_wav(wav_path, track)
@@ -327,7 +327,7 @@ def run_animation(
             out_with_audio = os.path.splitext(out)[0] + "_audio.mp4"
             mux_audio(out, wav_path, out_with_audio)
 
-    log.info(f"✔ Готово за {time.time()-t0:.1f} с")
+    log.info(f"✔ Done in {time.time()-t0:.1f} s")
     return out
 
 
@@ -360,9 +360,9 @@ def cmd_animate(args: argparse.Namespace) -> None:
     final_value = args.value if args.value is not None else 10**args.digits - 1
 
     log.info(
-        f"Конфиг: {args.digits} разряда, {ac.fps} fps, "
-        f"layout={ac.layout}, прозрачность={ac.transparent_housing}, "
-        f"звук={ac.with_audio}, финал={final_value}"
+        f"Config: {args.digits} digits, {ac.fps} fps, "
+        f"layout={ac.layout}, transparency={ac.transparent_housing}, "
+        f"audio={ac.with_audio}, final={final_value}"
     )
 
     run_animation(cfg, ac, out=args.out, final_value=final_value)
@@ -370,22 +370,23 @@ def cmd_animate(args: argparse.Namespace) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="mc", description="Механический счётчик: генерация STL и анимация сборки."
+        prog="mc",
+        description="Mechanical counter: STL generation and assembly animation.",
     )
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
     sub = p.add_subparsers(dest="command", required=True)
 
-    ps = sub.add_parser("stl", help="Генерация STL всех деталей")
+    ps = sub.add_parser("stl", help="Generate STL for all parts")
     ps.add_argument("--digits", type=int, default=3, choices=[1, 2, 3, 4])
-    ps.add_argument("--out", default="stl", help="Папка для STL")
-    ps.add_argument("--no-step", action="store_true", help="Не экспортировать STEP")
-    ps.add_argument("--png", action="store_true", help="Сохранить PNG-превью")
-    ps.add_argument("--scheme", action="store_true", help="Показать схему сборки")
-    ps.add_argument("-q", "--quiet", action="store_true", help="Меньше логов")
+    ps.add_argument("--out", default="stl", help="Output folder for STL files")
+    ps.add_argument("--no-step", action="store_true", help="Do not export STEP")
+    ps.add_argument("--png", action="store_true", help="Save PNG preview")
+    ps.add_argument("--scheme", action="store_true", help="Show assembly diagram")
+    ps.add_argument("-q", "--quiet", action="store_true", help="Less logging")
     ps.set_defaults(func=cmd_stl)
 
-    pa = sub.add_parser("animate", help="Анимация сборки / работы механизма")
+    pa = sub.add_parser("animate", help="Assembly / mechanism operation animation")
     pa.add_argument("--digits", type=int, default=3, choices=[1, 2, 3, 4])
     pa.add_argument("--fps", type=int, default=30)
     pa.add_argument("--out", default="out/assembly.mp4")

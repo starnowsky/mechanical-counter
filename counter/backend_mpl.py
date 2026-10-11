@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""matplotlib fallback-бэкенд (работает без GPU)."""
+"""matplotlib fallback backend (works without a GPU)."""
 
 from __future__ import annotations
 
@@ -25,11 +25,11 @@ log = logging.getLogger("backend_mpl")
 
 
 class MPLBackend:
-    """Медленный, но везде работающий рендер на matplotlib."""
+    """Slow but portable matplotlib renderer."""
 
     def __init__(self, resolution: Tuple[int, int] = (1280, 720), fast: bool = False):
         if not HAS_MPL:
-            raise RuntimeError("matplotlib не установлен")
+            raise RuntimeError("matplotlib is not installed")
         self.resolution = resolution
         self._meshes: Dict[str, np.ndarray] = {}
         self._transparent: set[str] = set()

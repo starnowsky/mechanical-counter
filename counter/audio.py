@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Синтез звуков для анимации (щёлчки, гул, сигнал переполнения)."""
+"""Sound synthesis for the animation (clicks, hum, overflow chime)."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ def _envelope(n: int, decay: float = 8.0) -> np.ndarray:
 
 
 def click(freq: float = 2400.0, dur: float = 0.03, vol: float = 0.35) -> np.ndarray:
-    """Короткий щелчок."""
+    """A short click."""
     n = max(int(SAMPLE_RATE * dur), 1)
     t = np.arange(n) / SAMPLE_RATE
     wave = np.sin(2 * np.pi * freq * t)
@@ -25,7 +25,7 @@ def click(freq: float = 2400.0, dur: float = 0.03, vol: float = 0.35) -> np.ndar
 
 
 def motor_hum(dur: float = 0.15, vol: float = 0.03) -> np.ndarray:
-    """Низкочастотный гул мотора."""
+    """Low-frequency motor hum."""
     n = max(int(SAMPLE_RATE * dur), 1)
     t = np.arange(n) / SAMPLE_RATE
     wave = np.sin(2 * np.pi * 110.0 * t) + 0.5 * np.sin(2 * np.pi * 220.0 * t)
@@ -33,7 +33,7 @@ def motor_hum(dur: float = 0.15, vol: float = 0.03) -> np.ndarray:
 
 
 def overflow_chime(dur: float = 0.18, vol: float = 0.28) -> np.ndarray:
-    """Сигнал переполнения разряда (двухтоновый)."""
+    """Digit-overflow chime (two-tone)."""
     n = max(int(SAMPLE_RATE * dur), 1)
     t = np.arange(n) / SAMPLE_RATE
     wave = np.sin(2 * np.pi * 880.0 * t) + np.sin(2 * np.pi * 1320.0 * t)
@@ -41,14 +41,14 @@ def overflow_chime(dur: float = 0.18, vol: float = 0.28) -> np.ndarray:
 
 
 def silence(dur: float = 0.1) -> np.ndarray:
-    """Тишина заданной длительности."""
+    """Silence of a given duration."""
     return np.zeros(max(int(SAMPLE_RATE * dur), 1), dtype=np.float32)
 
 
 def build_track(
     fps: int, n_frames: int, events: List[Tuple[int, np.ndarray]]
 ) -> np.ndarray:
-    """Раскладывает события (номер_кадра, сэмплы) на общую дорожку."""
+    """Lay out events (frame_index, samples) onto a single track."""
     total = max(int(SAMPLE_RATE * n_frames / fps), 1)
     track: np.ndarray = np.zeros(total, dtype=np.float32)
     for frame, samples in events:
@@ -66,7 +66,7 @@ def build_track(
 
 
 def save_wav(path: str, track: np.ndarray) -> None:
-    """Сохраняет дорожку в WAV (16 бит, моно)."""
+    """Save a track to WAV (16-bit, mono)."""
     data = np.clip(np.asarray(track, dtype=np.float32), -1.0, 1.0)
     pcm = (data * 32767.0).astype(np.int16)
     with wave.open(path, "w") as w:

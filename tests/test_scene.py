@@ -1,4 +1,4 @@
-"""Тесты сцены."""
+"""Scene tests."""
 
 from counter import Config
 from counter.scene import build_scene
@@ -19,4 +19,4 @@ def test_scene_has_all_parts():
 def test_scene_part_count():
     cfg = Config(digits=3)
     parts = build_scene(cfg)
-    assert len(parts) == 11  # 3 барабана + 8 деталей
+    assert len(parts) == 11  # 3 drums + 8 parts

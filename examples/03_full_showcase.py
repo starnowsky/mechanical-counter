@@ -1,10 +1,10 @@
 """
-Пример: полный рендер со split-screen и звуком.
+Example: full render with split-screen and sound.
 
-Запуск:
+Run:
     python examples/03_full_showcase.py
 """
-import subprocess
+
 from counter import Config
 from counter.cli import run_animation
 from counter.cli_animate import AnimConfig

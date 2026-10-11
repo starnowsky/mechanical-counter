@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Системные зависимости для VTK / EGL / ffmpeg
+# System dependencies for VTK / EGL / ffmpeg
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libgl1-mesa-dri libglx-mesa0 libegl1-mesa libosmesa6 \
         xvfb ffmpeg \
@@ -13,7 +13,7 @@ COPY counter/ ./counter/
 
 RUN pip install --no-cache-dir -e ".[all]"
 
-# off-screen рендер
+# off-screen rendering
 ENV VTK_DEFAULT_OPENGL_WINDOW=vtkEGLRenderWindow \
     PYVISTA_OFF_SCREEN=true \
     PYTHONUNBUFFERED=1

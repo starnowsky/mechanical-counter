@@ -1,4 +1,4 @@
-"""Тесты CLI."""
+"""CLI tests."""
 
 import subprocess
 import sys

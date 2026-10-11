@@ -2,7 +2,7 @@
 
 # ⚙️ Mechanical Counter
 
-**Механический счётчик для 3D-печати — с генерацией STL, анимацией сборки и звуком**
+**A mechanical counter for 3D printing — with STL generation, assembly animation, and sound**
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -15,21 +15,21 @@
 
 ---
 
-## ✨ Что это
+## ✨ What is it
 
-Полный пайплайн для создания **3D-печатного механического счётчика** с тремя разрядами (0–999):
+A complete pipeline for creating a **3D-printable mechanical counter** with three digits (0–999):
 
-| Возможность | Команда |
+| Feature | Command |
 |---|---|
-| 🖨 **Генерация STL** всех деталей | `mc stl --digits 3` |
-| 🎬 **Анимация сборки** (PyVista / matplotlib) | `mc animate --layout lshape` |
-| 🔊 **Синхронизированный звук** щелчков | встроен в `animate` |
-| 📊 **Прогресс-бар, логи, валидация меша** | везде |
-| 🎥 **Split-screen 3 камеры** (изо/фронт/сверху) | `--layout lshape` |
-| 🪟 **Прозрачный корпус** при работе | `--no-transparent` откл. |
-| 📄 **STEP-экспорт** для CAD | `--step` |
+| 🖨 **STL generation** of all parts | `mc stl --digits 3` |
+| 🎬 **Assembly animation** (PyVista / matplotlib) | `mc animate --layout lshape` |
+| 🔊 **Synchronized click sounds** | built into `animate` |
+| 📊 **Progress bar, logs, mesh validation** | everywhere |
+| 🎥 **Split-screen with 3 cameras** (iso/front/top) | `--layout lshape` |
+| 🪟 **Transparent housing** during operation | `--no-transparent` disables |
+| 📄 **STEP export** for CAD | `--step` |
 
-## 🎥 Превью
+## 🎥 Preview
 
 <table>
 <tr>
@@ -37,20 +37,20 @@
 <td><img src="docs/images/operate.gif" width="320"/></td>
 </tr>
 <tr>
-<td align="center">Сборка</td>
-<td align="center">Работа механизма</td>
+<td align="center">Assembly</td>
+<td align="center">Mechanism operation</td>
 </tr>
 </table>
 
-## 🚀 Установка
+## 🚀 Installation
 
-### Быстрая (pip)
+### Quick (pip)
 
 ```bash
 pip install mechanical-counter
 ```
 
-### Из исходников
+### From source
 
 ```bash
 git clone https://github.com/USERNAME/mechanical-counter.git
@@ -58,44 +58,44 @@ cd mechanical-counter
 pip install -e ".[full]"
 ```
 
-### Опциональные компоненты
+### Optional components
 
 ```bash
-pip install mechanical-counter[step]    # +cadquery для STEP
-pip install mechanical-counter[audio]   # +звук
-pip install mechanical-counter[fast]    # +pyvista для быстрого рендера
-pip install mechanical-counter[all]     # всё сразу
+pip install mechanical-counter[step]    # +cadquery for STEP
+pip install mechanical-counter[audio]   # +sound
+pip install mechanical-counter[fast]    # +pyvista for fast rendering
+pip install mechanical-counter[all]     # everything
 ```
 
-## ▶️ Использование
+## ▶️ Usage
 
-### Генерация STL
+### STL generation
 
 ```bash
 mc stl --digits 3 --out ./stl
 ```
 
-Создаст `drum_units.stl`, `drum_tens.stl`, `housing.stl`, `cover.stl`,
+Creates `drum_units.stl`, `drum_tens.stl`, `housing.stl`, `cover.stl`,
 `axle.stl`, `pawl.stl`, `ratchet_stop.stl`, `plus_button.stl`,
-`reset_button.stl` — готово к слайсингу.
+`reset_button.stl` — ready for slicing.
 
-### Анимация
+### Animation
 
 ```bash
-# Полный шоурил: сборка → работа → разборка
+# Full showreel: assembly → operation → disassembly
 mc animate --digits 3 --layout lshape --out out/showreel.mp4
 
-# Быстрый превью-рендер
+# Fast preview render
 mc animate --fast
 
-# Без звука, без split-screen
+# No sound, no split-screen
 mc animate --no-audio --layout none
 
-# Только работа механизма до значения 137
+# Only mechanism operation up to value 137
 mc animate --mode operate --value 137
 ```
 
-### Программно
+### Programmatic use
 
 ```python
 from counter import Config
@@ -113,78 +113,78 @@ img = backend.screenshot()
 backend.close()
 ```
 
-## 🧰 Требования
+## 🧰 Requirements
 
-| Компонент | Обязательно | Для чего |
+| Component | Required | Purpose |
 |---|---|---|
 | Python 3.9+ | ✔ | |
-| numpy | ✔ | математика |
-| numpy-stl | ✔ | экспорт STL |
-| tqdm | ✔ | прогресс-бар |
-| matplotlib | ○ | fallback-рендер, PNG-превью |
-| pyvista + vtk | ○ | **быстрый** 3D-рендер |
+| numpy | ✔ | math |
+| numpy-stl | ✔ | STL export |
+| tqdm | ✔ | progress bar |
+| matplotlib | ○ | fallback rendering, PNG preview |
+| pyvista + vtk | ○ | **fast** 3D rendering |
 | imageio + ffmpeg | ○ | GIF/MP4 |
-| cadquery | ○ | STEP-экспорт |
+| cadquery | ○ | STEP export |
 | pillow | ○ | split-screen |
 
-## 🎯 Структура проекта
+## 🎯 Project structure
 
 ```
 counter/
-├── geometry.py    # генерация меша счётчика
-├── scene.py       # сцена для анимации
-├── cameras.py     # камеры + split-screen
-├── audio.py       # синтез звуков
-├── backend_pv.py  # PyVista-рендер (быстрый)
-├── backend_mpl.py # matplotlib-рендер (fallback)
+├── geometry.py    # counter mesh generation
+├── scene.py       # animation scene
+├── cameras.py     # cameras + split-screen
+├── audio.py       # sound synthesis
+├── backend_pv.py  # PyVista renderer (fast)
+├── backend_mpl.py # matplotlib renderer (fallback)
 └── cli.py         # CLI: stl + animate
 ```
 
-## 🧪 Тесты
+## 🧪 Tests
 
 ```bash
 make test           # pytest
 make lint           # flake8 + mypy
 make format         # black + isort
-make ci             # всё вместе
+make ci             # all together
 ```
 
-## 🖨 Печать и сборка
+## 🖨 Printing and assembly
 
-Смотри [`docs/ASSEMBLY.md`](docs/ASSEMBLY.md) — пошаговая инструкция
-с фото, спецификацией материалов и постобработкой.
+See [`docs/ASSEMBLY.md`](docs/ASSEMBLY.md) — a step-by-step guide
+with photos, a bill of materials, and post-processing.
 
-**Кратко:**
-- Материал: **PETG** (пружины, кнопки) + **PLA** (корпус)
-- Слой: **0.16 мм**
-- Заполнение: **20%** (пружины 40%)
-- Поддержки: **выключены**
-- Постобработка: сверло Ø4.1 для осей, краска для цифр
+**In short:**
+- Material: **PETG** (springs, buttons) + **PLA** (housing)
+- Layer: **0.16 mm**
+- Infill: **20%** (springs 40%)
+- Supports: **disabled**
+- Post-processing: Ø4.1 drill bit for axles, paint for digits
 
-## 📖 Документация
+## 📖 Documentation
 
-- [Архитектура](docs/ARCHITECTURE.md) — как устроен код
-- [Сборка](docs/ASSEMBLY.md) — печать и монтаж
-- [Спецификация](docs/BOM.md) — список деталей
+- [Architecture](docs/ARCHITECTURE.md) — how the code is structured
+- [Assembly](docs/ASSEMBLY.md) — printing and mounting
+- [Bill of materials](docs/BOM.md) — parts list
 - [Troubleshooting](docs/TROUBLESHOOTING.md) — VTK, EGL, ffmpeg
 
-## 🤝 Контрибьютинг
+## 🤝 Contributing
 
-PR-ы приветствуются! Смотри [CONTRIBUTING.md](CONTRIBUTING.md).
-Баги и идеи — в [Issues](https://github.com/USERNAME/mechanical-counter/issues).
+PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
+Bugs and ideas — in [Issues](https://github.com/USERNAME/mechanical-counter/issues).
 
-## 📜 Лицензия
+## 📜 License
 
-MIT — делай что хочешь. Смотри [LICENSE](LICENSE).
+MIT — do whatever you want. See [LICENSE](LICENSE).
 
-## 🙏 Благодарности
+## 🙏 Acknowledgements
 
-- [PyVista](https://pyvista.org) за быстрый 3D
-- [numpy-stl](https://github.com/wolph/numpy-stl) за STL
-- Всем, кто печатал и присылал фото сборок
+- [PyVista](https://pyvista.org) for fast 3D
+- [numpy-stl](https://github.com/wolph/numpy-stl) for STL
+- Everyone who printed and shared assembly photos
 
 <div align="center">
 
-**[⬆ наверх](#-mechanical-counter)**
+**[⬆ back to top](#-mechanical-counter)**
 
 </div>
