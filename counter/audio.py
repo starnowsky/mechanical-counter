@@ -50,7 +50,7 @@ def build_track(
 ) -> np.ndarray:
     """Раскладывает события (номер_кадра, сэмплы) на общую дорожку."""
     total = max(int(SAMPLE_RATE * n_frames / fps), 1)
-    track = np.zeros(total, dtype=np.float32)
+    track: np.ndarray = np.zeros(total, dtype=np.float32)
     for frame, samples in events:
         samples = np.asarray(samples, dtype=np.float32)
         start = int(frame / fps * SAMPLE_RATE)
@@ -61,7 +61,7 @@ def build_track(
             track[start:end] += samples[: end - start]
     peak = float(np.abs(track).max()) if len(track) else 0.0
     if peak > 1.0:
-        track = track / peak
+        track = track * np.float32(1.0 / peak)
     return track
 
 
